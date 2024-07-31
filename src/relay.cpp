@@ -639,6 +639,14 @@ int prepare_vlan_sockets(int &gua_sock, int &lla_sock, relay_config &config) {
         sleep(5);
     } while (retry < 6);
 
+    if (!config.vrf.empty() && bind_gua)
+    {
+        const char *vrf = config.vrf.c_str();
+        if (setsockopt(gua_sock, SOL_SOCKET, SO_BINDTODEVICE, vrf, sizeof(vrf)) < 0) {
+            syslog(LOG_ERR, "setsockopt for gua_sock: SO_BINDTODEVICE: %m\n");
+        }
+    }
+
     if ((!bind_gua) || (bind(gua_sock, (sockaddr *)&gua, sizeof(gua)) == -1)) {
         syslog(LOG_ERR, "bind: Failed to bind socket to global ipv6 address on interface %s after %d retries with %s\n",
                config.interface.c_str(), retry, strerror(errno));
