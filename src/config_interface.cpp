@@ -7,6 +7,7 @@ constexpr auto DEFAULT_TIMEOUT_MSEC = 1000;
 
 bool pollSwssNotifcation = true;
 swss::Select swssSelect;
+std::shared_ptr<swss::Table> mvlanIntfTablePtr;
 
 /**
  * @code                void initialize_swss()
@@ -21,6 +22,7 @@ void initialize_swss(std::unordered_map<std::string, relay_config> &vlans)
         std::shared_ptr<swss::DBConnector> configDbPtr = std::make_shared<swss::DBConnector> ("CONFIG_DB", 0);
         swss::SubscriberStateTable ipHelpersTable(configDbPtr.get(), "DHCP_RELAY");
         swssSelect.addSelectable(&ipHelpersTable);
+	mvlanIntfTablePtr = std::make_shared<swss::Table>(configDbPtr.get(), "VLAN_INTERFACE");
         get_dhcp(vlans, &ipHelpersTable, false);
     }
     catch (const std::bad_alloc &e) {
@@ -151,6 +153,11 @@ void processRelayNotification(std::deque<swss::KeyOpFieldsValuesTuple> &entries,
         }
         syslog(LOG_INFO, "add %s relay config, option79 %s interface-id %s\n", vlan.c_str(),
                intf.is_option_79 ? "enable" : "disable", intf.is_interface_id ? "enable" : "disable");
+
+        std::string value;
+        mvlanIntfTablePtr->hget(vlan, "vrf_name", value);
+        intf.vrf = value;
+
         vlans[vlan] = intf;
     }
 }

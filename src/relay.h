@@ -70,6 +70,7 @@ struct relay_config {
     std::shared_ptr<swss::DBConnector> state_db;
     std::string interface;
     std::string mux_key;
+    std::string vrf;
     std::vector<std::string> servers;
     std::vector<sockaddr_in6> servers_sock;
     bool is_option_79;
